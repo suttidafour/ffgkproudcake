@@ -10,142 +10,60 @@ body {
   height: 100vh;
   font-family: sans-serif;
   background: linear-gradient(135deg, #fde2e4, #e0fbfc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
   position: relative;
 }
-
-/* หน้าจอเริ่มต้น */
 .screen { width: 100%; max-width: 720px; text-align: center; padding: 20px; display: none; }
 .screen.active { display: block; animation: fadeIn 0.6s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
 .intro h1 { font-size: 36px; margin-bottom: 20px; }
-.intro input {
-  width: 80%;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 25px;
-  border: none;
-  outline: none;
-  text-align: center;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.1);
-}
-.intro button {
-  padding: 12px 26px;
-  font-size: 16px;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  background: #ffc8dd;
-  box-shadow: 0 4px 10px rgba(0,0,0,.2);
-}
-
-/* โซนแอปหลัก */
-.app input {
-  width: 90%;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 25px;
-  border: none;
-  outline: none;
-  text-align: center;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.1);
-}
-.add-btn {
-  padding: 12px 26px;
-  margin-bottom: 14px;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  background: #ffafcc;
-  box-shadow: 0 4px 10px rgba(0,0,0,.2);
-}
-
-.controls {
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-}
+.intro input { width: 80%; padding: 14px; font-size: 16px; border-radius: 25px; border: none; outline: none; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,.1); }
+.intro button { padding: 12px 26px; font-size: 16px; border-radius: 30px; border: none; cursor: pointer; background: #ffc8dd; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+.app input { width: 70%; padding: 14px; font-size: 16px; border-radius: 25px; border: none; outline: none; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,.1); }
+.welcome { margin-bottom: 8px; font-size: 18px; }
+.controls { margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; }
 .color-picker { display: flex; gap: 8px; }
-.color-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-  box-shadow: 0 3px 6px rgba(0,0,0,.2);
-}
+.color-btn { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; box-shadow: 0 3px 6px rgba(0,0,0,.2); }
 .color-btn.active { border-color: #333; }
+button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; cursor: pointer; background: #ffc8dd; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+.cake-wrapper { position: relative; width: 100%; height: 460px; }
+.cake { position: absolute; bottom: 0; width: 100%; font-size: 420px; text-align: center; line-height: 1; z-index: 1; }
+.cake.shake { animation: cakeShake 0.25s ease; }
+@keyframes cakeShake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-1deg); } 50% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+.signs { position: absolute; bottom: 220px; left: 50%; transform: translateX(-50%); width: 460px; height: 180px; z-index: 2; }
+.sign { position: absolute; display: flex; align-items: center; cursor: grab; touch-action: none; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+.label { color: #000; font-size: 14px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.close-btn { margin-left: 6px; font-size: 14px; cursor: pointer; color: #fff; background: #ff6b6b; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+@media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 320px; bottom: 180px; } }
 
-button { 
-  padding: 8px 14px; 
-  border-radius: 20px; 
-  border: none; 
-  font-size: 14px; 
-  cursor: pointer; 
-  background: #ffc8dd; 
-  box-shadow: 0 3px 8px rgba(0,0,0,.15); 
-}
-
-/* ถังขยะ */
-#trashBin {
+/* ===== Emoji Snow Background ===== */
+#emoji-snow {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 90px;
-  height: 90px;
-  font-size: 48px;
-  background: #ffcccc;
-  border-radius: 14px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 3px 8px rgba(0,0,0,.25);
-}
-
-/* เค้ก 🎂 */
-.cake-wrapper {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 600px;
-  pointer-events: none; /* ป้องกันไม่ให้เค้กบังการลาก */
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
 }
-.cake {
-  font-size: 600px; /* เค้กใหญ่ */
-  text-align: center;
-  line-height: 1;
-  user-select: none;
-}
-
-/* ป้ายข้อความ */
-.sign {
+.emoji {
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: grab;
-  touch-action: none;
+  font-size: 24px;
+  will-change: transform;
+  opacity: 0.8;
+  user-select: none;
+  pointer-events: none;
 }
-.label {
-  font-size: 14px;
-  padding: 6px 12px;
-  border-radius: 14px;
-  white-space: nowrap;
-  box-shadow: 0 3px 8px rgba(0,0,0,.15);
-  color: #000;
-}
-.stick { width: 4px; height: 70px; background: #cdb4db; border-radius: 2px; }
 </style>
 </head>
 <body>
+
+<!-- Emoji Snow Layer -->
+<div id="emoji-snow"></div>
 
 <!-- Intro -->
 <div class="screen intro active" id="intro">
@@ -154,13 +72,10 @@ button {
   <button id="startBtn">Start 🎉</button>
 </div>
 
-<!-- Main App -->
+<!-- App -->
 <div class="screen app" id="app">
   <div class="welcome" id="welcomeText"></div>
-
   <input id="msg" placeholder="✨ Things I'm proud of this year ✨">
-  <button class="add-btn" id="addBtn">➕ Enter</button>
-
   <div class="controls">
     <div class="color-picker">
       <div class="color-btn active" data-color="#ffafcc" style="background:#ffafcc"></div>
@@ -170,54 +85,56 @@ button {
       <div class="color-btn" data-color="#cdb4db" style="background:#cdb4db"></div>
     </div>
     <button id="exportBtn">📸 Export</button>
+    <button id="sendBtn">➡️</button>
   </div>
-
   <div class="cake-wrapper">
+    <div class="signs" id="signs"></div>
     <div class="cake" id="cake">🎂</div>
   </div>
 </div>
 
-<div id="trashBin">🗑️</div>
-
-<!-- html2canvas -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-// Firebase config
-firebase.initializeApp({
+// ===== Firebase config =====
+const firebaseConfig = {
   apiKey: "AIzaSyDTGOKNMwtoTsu_u6nCm_wKUQUSUZIflE4",
   authDomain: "goodjob-ffgk.firebaseapp.com",
   databaseURL: "https://goodjob-ffgk-default-rtdb.firebaseio.com",
   projectId: "goodjob-ffgk"
-});
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Room
-const params = new URLSearchParams(location.search);
+// ===== Room จาก URL =====
+const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room") || "love";
 
 const intro = document.getElementById("intro");
 const app = document.getElementById("app");
 const startBtn = document.getElementById("startBtn");
+const nameInput = document.getElementById("nameInput");
 const welcomeText = document.getElementById("welcomeText");
 const input = document.getElementById("msg");
-const addBtn = document.getElementById("addBtn");
-const trashBin = document.getElementById("trashBin");
+const signsBox = document.getElementById("signs");
+const cake = document.getElementById("cake");
 const colorButtons = document.querySelectorAll(".color-btn");
+const sendBtn = document.getElementById("sendBtn");
 
 let currentColor = "#ffafcc";
+let userName = "";
 
-// Start app
+// ===== Start =====
 startBtn.onclick = () => {
+  userName = nameInput.value.trim() || "Friend";
   welcomeText.innerText = `Our 2025 ✨`;
   intro.classList.remove("active");
   app.classList.add("active");
 };
 
-// Select color
+// ===== Color select =====
 colorButtons.forEach(btn => {
   btn.onclick = () => {
     colorButtons.forEach(b => b.classList.remove("active"));
@@ -226,82 +143,90 @@ colorButtons.forEach(btn => {
   };
 });
 
-// Add message
-function sendMessage() {
+// ===== Add sign function =====
+function addSign() {
   const text = input.value.trim();
   if (!text) return;
-  db.ref(`rooms/${roomId}/signs`).push({
-    text,
-    color: currentColor,
-    timestamp: Date.now()
-  });
+  db.ref(`rooms/${roomId}/signs`).push({ name: userName, text, color: currentColor, timestamp: Date.now() });
   input.value = "";
 }
-input.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
-addBtn.onclick = sendMessage;
 
-// Listen realtime
-db.ref(`rooms/${roomId}/signs`).on("child_added", snap => {
-  const d = snap.val();
-  createSignElement(d.text, d.color, snap.key);
+// ===== Send on Enter or Send Button =====
+input.addEventListener("keydown", e => { if (e.key === "Enter") addSign(); });
+sendBtn.addEventListener("click", addSign);
+
+// ===== Listen realtime =====
+db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
+  const data = snapshot.val();
+  const key = snapshot.key;
+  createSignElement(data.name, data.text, data.color, key);
 });
 
-// Create sign element
-function createSignElement(text, color, key) {
+// ===== Create sign element =====
+function createSignElement(name, text, color, key) {
   const sign = document.createElement("div");
   sign.className = "sign";
-  sign.dataset.key = key;
+  sign.dataset.firebaseKey = key;
 
-  // label + stick
   const label = document.createElement("div");
   label.className = "label";
-  label.innerText = text;
+  label.innerText = `${name}: ${text}`;
   label.style.background = color;
+  label.style.padding = "4px 8px";
+  label.style.borderRadius = "12px";
 
-  const stick = document.createElement("div");
-  stick.className = "stick";
+  const closeBtn = document.createElement("div");
+  closeBtn.className = "close-btn";
+  closeBtn.innerText = "❌";
+  closeBtn.style.pointerEvents = "auto";
+  closeBtn.addEventListener("pointerdown", (e) => {
+    e.stopPropagation(); 
+    if (sign.dataset.firebaseKey) {
+      db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).remove();
+    }
+    sign.remove();
+  });
 
-  sign.append(label, stick);
+  sign.append(label, closeBtn);
+  sign.style.left = "50%";
+  sign.style.top = "40px";
+  sign.style.transform = "translateX(-50%)";
 
-  // default pos
-  sign.style.left = "50px";
-  sign.style.top = "50px";
-
-  document.body.appendChild(sign);
   enableDrag(sign);
+  signsBox.appendChild(sign);
+
+  cake.classList.add("shake");
+  setTimeout(() => cake.classList.remove("shake"), 350);
 }
 
-// Drag + delete
+// ===== Drag =====
 function enableDrag(el) {
-  let ox=0, oy=0, dragging=false;
+  let offsetX, offsetY, dragging = false;
 
-  el.addEventListener("pointerdown", e => {
-    dragging = true;
-    el.setPointerCapture(e.pointerId);
-    ox = e.clientX - el.getBoundingClientRect().left;
-    oy = e.clientY - el.getBoundingClientRect().top;
-    el.style.position = "fixed";
+  el.addEventListener("pointerdown", e => { 
+    dragging = true; 
+    el.setPointerCapture(e.pointerId); 
+    const r = el.getBoundingClientRect(); 
+    offsetX = e.clientX - r.left; 
+    offsetY = e.clientY - r.top; 
   });
 
   el.addEventListener("pointermove", e => {
     if (!dragging) return;
-    el.style.left = (e.clientX - ox) + "px";
-    el.style.top = (e.clientY - oy) + "px";
+    const box = signsBox.getBoundingClientRect();
+    let x = e.clientX - box.left - offsetX;
+    let y = e.clientY - box.top - offsetY;
+    x = Math.max(0, Math.min(x, box.width - el.offsetWidth));
+    y = Math.max(0, Math.min(y, box.height - el.offsetHeight));
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    el.style.transform = "";
   });
 
-  el.addEventListener("pointerup", () => {
-    dragging = false;
-    // check trash collision
-    const t = trashBin.getBoundingClientRect();
-    const s = el.getBoundingClientRect();
-    if (s.right > t.left && s.left < t.right && s.bottom > t.top && s.top < t.bottom) {
-      db.ref(`rooms/${roomId}/signs/${el.dataset.key}`).remove();
-      el.remove();
-    }
-  });
+  el.addEventListener("pointerup", () => { dragging = false; });
 }
 
-// Export image
+// ===== Export =====
 document.getElementById("exportBtn").onclick = () => {
   html2canvas(document.querySelector(".cake-wrapper")).then(canvas => {
     const link = document.createElement("a");
@@ -310,6 +235,38 @@ document.getElementById("exportBtn").onclick = () => {
     link.click();
   });
 };
+
+// ===== Emoji Snow =====
+const emojis = ['🐼','🐨','🐧','🤍','✨','🎄','🎅','🎁','❄️','☃️','🔔','🌟','🕯️','🧣','🧤','🛷','🦌','🍪','🎀','⛄','🎉'];
+
+function createEmoji() {
+  const emojiEl = document.createElement('div');
+  emojiEl.className = 'emoji';
+  emojiEl.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+  emojiEl.style.left = Math.random() * window.innerWidth + 'px';
+  emojiEl.style.fontSize = (20 + Math.random() * 30) + 'px';
+  emojiEl.style.opacity = 0.5 + Math.random() * 0.5;
+
+  document.getElementById('emoji-snow').appendChild(emojiEl);
+
+  let top = -50;
+  const speed = 1 + Math.random() * 2;
+  const swing = Math.random() * 50;
+
+  function fall() {
+    top += speed;
+    const x = parseFloat(emojiEl.style.left) + Math.sin(top / 50) * swing;
+    emojiEl.style.transform = `translate(${x}px, ${top}px)`;
+    if (top < window.innerHeight + 50) {
+      requestAnimationFrame(fall);
+    } else {
+      emojiEl.remove();
+    }
+  }
+  fall();
+}
+
+setInterval(createEmoji, 300);
 </script>
 
 </body>
