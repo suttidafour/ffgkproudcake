@@ -35,7 +35,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 @keyframes cakeShake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-1deg); } 50% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
 .signs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 2; }
 .sign { position: absolute; display: flex; align-items: center; cursor: grab; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); pointer-events: auto; }
-.label { color: #000; font-size: 14px; white-space: normal; /* แก้จาก nowrap */ max-width: none; overflow: visible; text-overflow: clip; } /* แก้ CSS ให้โชว์ข้อความทั้งหมด */
+.label { color: #000; font-size: 14px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 .close-btn { font-size: 12px; color: #888; background: transparent; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 6px; border-radius: 50%; }
 .resize-handle { width: 10px; height: 10px; background: #555; border-radius: 50%; cursor: nwse-resize; margin-left: 4px; }
 @media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 100%; height: 100%; } }
@@ -124,6 +124,7 @@ const sendBtn = document.getElementById("sendBtn");
 let currentColor = "#ffafcc";
 let userName = "";
 
+// ===== Start app =====
 startBtn.onclick = () => {
   userName = nameInput.value.trim() || "Friend";
   welcomeText.innerText = ` FFGK 2025 ✨`;
@@ -131,29 +132,45 @@ startBtn.onclick = () => {
   app.classList.add("active");
 };
 
-// ===== Color select =====
+// ===== Add sign =====
+function addSign() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  const signData = {
+    name: userName,
+    text,
+    color: currentColor,
+    timestamp: Date.now(),
+    x: null,
+    y: null,
+    scale: 1
+  };
+
+  db.ref(`rooms/${roomId}/signs`).push(signData);
+  input.value = "";
+}
+
+input.addEventListener("keydown", e => { if(e.key === "Enter") addSign(); });
+sendBtn.addEventListener("click", addSign);
+
+// ===== Color select (update only user's signs) =====
 colorButtons.forEach(btn => {
   btn.onclick = () => {
     colorButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentColor = btn.dataset.color;
+
+    // Update color only for signs created by this user
+    db.ref(`rooms/${roomId}/signs`).orderByChild('name').equalTo(userName).once('value', snapshot => {
+      snapshot.forEach(child => {
+        child.ref.update({ color: currentColor });
+      });
+    });
   };
 });
 
-// ===== Add sign =====
-function addSign() {
-  const text = input.value.trim();
-  if(!text) return;
-  db.ref(`rooms/${roomId}/signs`).push({ 
-    name: userName, text, color: currentColor, timestamp: Date.now(), x: null, y: null, scale: 1
-  });
-  input.value = "";
-}
-
-input.addEventListener("keydown", e => { if(e.key==="Enter") addSign(); });
-sendBtn.addEventListener("click", addSign);
-
-// ===== Listen realtime =====
+// ===== Realtime listeners =====
 db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
   const data = snapshot.val();
   const key = snapshot.key;
@@ -171,29 +188,28 @@ db.ref(`rooms/${roomId}/signs`).on("child_changed", snapshot => {
   }
 });
 
-// ===== Remove realtime =====
 db.ref(`rooms/${roomId}/signs`).on("child_removed", snapshot => {
   const key = snapshot.key;
   const sign = document.querySelector(`.sign[data-firebase-key='${key}']`);
   if(sign) sign.remove();
 });
 
-// ===== Create sign =====
-function createSignElement(name,text,color,key,x=null,y=null,scale=1){
+// ===== Create sign element =====
+function createSignElement(name, text, color, key, x=null, y=null, scale=1){
   const sign = document.createElement("div");
   sign.className = "sign";
   sign.dataset.firebaseKey = key;
 
   const label = document.createElement("div");
-  label.className="label";
-  label.innerText=`${name}: ${text}`;
-  label.style.background=color;
-  label.style.padding="4px 8px";
-  label.style.borderRadius="12px";
+  label.className = "label";
+  label.innerText = `${name}: ${text}`;
+  label.style.background = color;
+  label.style.padding = "4px 8px";
+  label.style.borderRadius = "12px";
 
   const closeBtn = document.createElement("div");
-  closeBtn.className="close-btn";
-  closeBtn.innerText="x";
+  closeBtn.className = "close-btn";
+  closeBtn.innerText = "x";
   closeBtn.addEventListener("pointerdown", e=>{
     e.stopPropagation();
     if(sign.dataset.firebaseKey){
@@ -202,9 +218,9 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   });
 
   const resizeHandle = document.createElement("div");
-  resizeHandle.className="resize-handle";
+  resizeHandle.className = "resize-handle";
 
-  sign.append(label,resizeHandle,closeBtn);
+  sign.append(label, resizeHandle, closeBtn);
   signsBox.appendChild(sign);
 
   sign.style.left = x!==null? x+"px":"50%";
@@ -213,7 +229,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
 
   // ===== Drag =====
   let offsetX,offsetY,dragging=false;
-  sign.addEventListener("pointerdown",e=>{
+  sign.addEventListener("pointerdown", e=>{
     if(e.target===resizeHandle) return;
     dragging=true;
     sign.setPointerCapture(e.pointerId);
@@ -221,7 +237,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
     offsetX=e.clientX-r.left;
     offsetY=e.clientY-r.top;
   });
-  sign.addEventListener("pointermove",e=>{
+  sign.addEventListener("pointermove", e=>{
     if(!dragging) return;
     const box=signsBox.getBoundingClientRect();
     let newX=e.clientX-box.left-offsetX;
@@ -240,14 +256,14 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   // ===== Resize =====
   let resizing=false;
   let startScale=scale;
-  resizeHandle.addEventListener("pointerdown",e=>{
+  resizeHandle.addEventListener("pointerdown", e=>{
     e.stopPropagation();
     resizing=true;
     sign.setPointerCapture(e.pointerId);
     startScale=scale;
     offsetX=e.clientX;
   });
-  resizeHandle.addEventListener("pointermove",e=>{
+  resizeHandle.addEventListener("pointermove", e=>{
     if(!resizing) return;
     let diff=(e.clientX-offsetX)/100;
     let newScale=Math.max(0.5,startScale+diff);
