@@ -76,7 +76,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
   <div class="welcome" id="welcomeText"></div>
   <input id="msg" placeholder="✨ Things I'm proud of this year ✨">
   <div class="controls">
-    <div class="color-picker">
+    <div class="color-picker" id="picker">
       <div class="color-btn active" data-color="#ffafcc" style="background:#ffafcc"></div>
       <div class="color-btn" data-color="#a2d2ff" style="background:#a2d2ff"></div>
       <div class="color-btn" data-color="#b7e4c7" style="background:#b7e4c7"></div>
@@ -121,7 +121,7 @@ const cake = document.getElementById("cake");
 const colorButtons = document.querySelectorAll(".color-btn");
 const sendBtn = document.getElementById("sendBtn");
 
-let currentColor = "#ffafcc";
+let selectedColor = "#ffafcc";
 let userName = "";
 
 // ===== Start app =====
@@ -132,6 +132,15 @@ startBtn.onclick = () => {
   app.classList.add("active");
 };
 
+// ===== Color selection before creating sign =====
+colorButtons.forEach(btn => {
+  btn.onclick = () => {
+    colorButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedColor = btn.dataset.color;
+  };
+});
+
 // ===== Add sign =====
 function addSign() {
   const text = input.value.trim();
@@ -140,7 +149,7 @@ function addSign() {
   const signData = {
     name: userName,
     text,
-    color: currentColor,
+    color: selectedColor,
     timestamp: Date.now(),
     x: null,
     y: null,
@@ -151,24 +160,9 @@ function addSign() {
   input.value = "";
 }
 
-input.addEventListener("keydown", e => { if(e.key === "Enter") addSign(); });
+// Enter key or button
+input.addEventListener("keydown", e => { if(e.key==="Enter") addSign(); });
 sendBtn.addEventListener("click", addSign);
-
-// ===== Color select (update only user's signs) =====
-colorButtons.forEach(btn => {
-  btn.onclick = () => {
-    colorButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentColor = btn.dataset.color;
-
-    // Update color only for signs created by this user
-    db.ref(`rooms/${roomId}/signs`).orderByChild('name').equalTo(userName).once('value', snapshot => {
-      snapshot.forEach(child => {
-        child.ref.update({ color: currentColor });
-      });
-    });
-  };
-});
 
 // ===== Realtime listeners =====
 db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
