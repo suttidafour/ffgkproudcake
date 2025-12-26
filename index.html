@@ -97,6 +97,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDTGOKNMwtoTsu_u6nCm_wKUQUSUZIflE4",
   authDomain: "goodjob-ffgk.firebaseapp.com",
@@ -130,6 +131,7 @@ startBtn.onclick = () => {
   app.classList.add("active");
 };
 
+// ===== Color select =====
 colorButtons.forEach(btn => {
   btn.onclick = () => {
     colorButtons.forEach(b => b.classList.remove("active"));
@@ -138,6 +140,7 @@ colorButtons.forEach(btn => {
   };
 });
 
+// ===== Add sign =====
 function addSign() {
   const text = input.value.trim();
   if(!text) return;
@@ -150,6 +153,7 @@ function addSign() {
 input.addEventListener("keydown", e => { if(e.key==="Enter") addSign(); });
 sendBtn.addEventListener("click", addSign);
 
+// ===== Listen realtime =====
 db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
   const data = snapshot.val();
   const key = snapshot.key;
@@ -160,16 +164,21 @@ db.ref(`rooms/${roomId}/signs`).on("child_changed", snapshot => {
   const data = snapshot.val();
   const key = snapshot.key;
   const sign = document.querySelector(`.sign[data-firebase-key='${key}']`);
-  if(sign) {
-    if(data.x !== null && data.y !== null){
-      sign.style.left = data.x + "px";
-      sign.style.top = data.y + "px";
-    }
-    if(data.color) sign.querySelector(".label").style.background = data.color;
-    if(data.scale) sign.style.transform = `scale(${data.scale})`;
+  if(sign){
+    if(data.x!==null && data.y!==null) sign.style.left=data.x+"px", sign.style.top=data.y+"px";
+    if(data.color) sign.querySelector(".label").style.background=data.color;
+    if(data.scale) sign.style.transform=`scale(${data.scale})`;
   }
 });
 
+// ===== Remove realtime =====
+db.ref(`rooms/${roomId}/signs`).on("child_removed", snapshot => {
+  const key = snapshot.key;
+  const sign = document.querySelector(`.sign[data-firebase-key='${key}']`);
+  if(sign) sign.remove();
+});
+
+// ===== Create sign =====
 function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   const sign = document.createElement("div");
   sign.className = "sign";
@@ -190,7 +199,6 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
     if(sign.dataset.firebaseKey){
       db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).remove();
     }
-    sign.remove();
   });
 
   const resizeHandle = document.createElement("div");
@@ -203,7 +211,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   sign.style.top = y!==null? y+"px":"40px";
   sign.style.transform = scale!==1? `scale(${scale})`:"translateX(-50%)";
 
-  // Drag
+  // ===== Drag =====
   let offsetX,offsetY,dragging=false;
   sign.addEventListener("pointerdown",e=>{
     if(e.target===resizeHandle) return;
@@ -223,11 +231,13 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
     sign.style.left=newX+"px";
     sign.style.top=newY+"px";
     sign.style.transform=`scale(${scale})`;
-    if(sign.dataset.firebaseKey) db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({x:newX,y:newY});
+
+    if(sign.dataset.firebaseKey)
+      db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({x:newX,y:newY});
   });
   sign.addEventListener("pointerup",()=>{dragging=false;});
 
-  // Resize
+  // ===== Resize =====
   let resizing=false;
   let startScale=scale;
   resizeHandle.addEventListener("pointerdown",e=>{
@@ -243,7 +253,8 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
     let newScale=Math.max(0.5,startScale+diff);
     scale=newScale;
     sign.style.transform=`scale(${scale})`;
-    if(sign.dataset.firebaseKey) db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({scale});
+    if(sign.dataset.firebaseKey)
+      db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({scale});
   });
   resizeHandle.addEventListener("pointerup",()=>{resizing=false;});
 
@@ -251,7 +262,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   setTimeout(()=>cake.classList.remove("shake"),350);
 }
 
-// Export
+// ===== Export =====
 document.getElementById("exportBtn").onclick = ()=>{
   html2canvas(document.querySelector(".cake-wrapper")).then(canvas=>{
     const link=document.createElement("a");
@@ -261,7 +272,7 @@ document.getElementById("exportBtn").onclick = ()=>{
   });
 };
 
-// Emoji snow
+// ===== Emoji snow =====
 const emojis=['❄️','☃️','✨','🎄','🎅','🎁','🌟','🕯️','🛷','🦌','🍪','🎀','⛄','🎉'];
 function createEmoji(){
   const e=document.createElement('div');
@@ -283,7 +294,7 @@ function createEmoji(){
   }
   fall();
 }
-setInterval(createEmoji, 300);
+setInterval(createEmoji,300);
 </script>
 
 </body>
