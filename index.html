@@ -19,35 +19,47 @@ body {
 .screen { width: 100%; max-width: 720px; text-align: center; padding: 20px; display: none; }
 .screen.active { display: block; animation: fadeIn 0.6s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
 .intro h1 { font-size: 36px; margin-bottom: 20px; }
 .intro input { width: 80%; padding: 14px; font-size: 16px; border-radius: 25px; border: none; outline: none; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,.1); }
 .intro button { padding: 12px 26px; font-size: 16px; border-radius: 30px; border: none; cursor: pointer; background: #ffc8dd; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
-
-.app input { width: 60%; padding: 12px; font-size: 16px; border-radius: 25px; border: none; outline: none; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,.1); }
+.app input { width: 70%; padding: 14px; font-size: 16px; border-radius: 25px; border: none; outline: none; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,.1); }
 .welcome { margin-bottom: 8px; font-size: 18px; }
 .controls { margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; }
 .color-picker { display: flex; gap: 8px; }
 .color-btn { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; box-shadow: 0 3px 6px rgba(0,0,0,.2); }
 .color-btn.active { border-color: #333; }
 button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; cursor: pointer; background: #ffc8dd; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
-
 .cake-wrapper { position: relative; width: 100%; height: 460px; }
 .cake { position: absolute; bottom: 0; width: 100%; font-size: 420px; text-align: center; line-height: 1; z-index: 1; }
 .cake.shake { animation: cakeShake 0.25s ease; }
 @keyframes cakeShake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-1deg); } 50% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
-
 .signs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 2; }
 .sign { position: absolute; display: flex; align-items: center; cursor: grab; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); pointer-events: auto; }
 .label { color: #000; font-size: 14px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 .close-btn { font-size: 12px; color: #888; background: transparent; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 6px; border-radius: 50%; }
 .resize-handle { width: 10px; height: 10px; background: #555; border-radius: 50%; cursor: nwse-resize; margin-left: 4px; }
-
 @media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 100%; height: 100%; } }
 
-#emoji-snow { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:0; }
-.emoji { position:absolute; font-size:16px; will-change:transform; opacity:0.15; user-select:none; pointer-events:none; transition:opacity 0.5s ease; }
-
+/* ===== Emoji Snow Background ===== */
+#emoji-snow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.emoji {
+  position: absolute;
+  font-size: 16px;
+  will-change: transform;
+  opacity: 0.15;
+  user-select: none;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
 </style>
 </head>
 <body>
@@ -64,7 +76,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
   <div class="welcome" id="welcomeText"></div>
   <input id="msg" placeholder="✨ Things I'm proud of this year ✨">
   <div class="controls">
-    <div class="color-picker" id="mainColorPicker">
+    <div class="color-picker">
       <div class="color-btn active" data-color="#ffafcc" style="background:#ffafcc"></div>
       <div class="color-btn" data-color="#a2d2ff" style="background:#a2d2ff"></div>
       <div class="color-btn" data-color="#b7e4c7" style="background:#b7e4c7"></div>
@@ -106,13 +118,12 @@ const welcomeText = document.getElementById("welcomeText");
 const input = document.getElementById("msg");
 const signsBox = document.getElementById("signs");
 const cake = document.getElementById("cake");
-const mainColorPicker = document.getElementById("mainColorPicker");
+const colorButtons = document.querySelectorAll(".color-btn");
 const sendBtn = document.getElementById("sendBtn");
 
+let currentColor = "#ffafcc";
 let userName = "";
-let selectedColor = "#ffafcc";
 
-// ===== Start app =====
 startBtn.onclick = () => {
   userName = nameInput.value.trim() || "Friend";
   welcomeText.innerText = ` FFGK 2025 ✨`;
@@ -120,38 +131,35 @@ startBtn.onclick = () => {
   app.classList.add("active");
 };
 
-// ===== Select color before creating sign =====
-mainColorPicker.querySelectorAll(".color-btn").forEach(btn=>{
-  btn.onclick = ()=>{
-    mainColorPicker.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("active"));
+// ===== Color select =====
+colorButtons.forEach(btn => {
+  btn.onclick = () => {
+    colorButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    selectedColor = btn.dataset.color;
-  }
+    currentColor = btn.dataset.color;
+  };
 });
 
 // ===== Add sign =====
 function addSign() {
   const text = input.value.trim();
   if(!text) return;
-  db.ref(`rooms/${roomId}/signs`).push({
-    name: userName,
-    text,
-    color: selectedColor,
-    timestamp: Date.now(),
-    x: null,
-    y: null,
-    scale: 1
+  db.ref(`rooms/${roomId}/signs`).push({ 
+    name: userName, text, color: currentColor, timestamp: Date.now(), x: null, y: null, scale: 1
   });
   input.value = "";
 }
+
 input.addEventListener("keydown", e => { if(e.key==="Enter") addSign(); });
 sendBtn.addEventListener("click", addSign);
 
 // ===== Listen realtime =====
 db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
   const data = snapshot.val();
-  createSignElement(data.name,data.text,data.color,snapshot.key,data.x,data.y,data.scale);
+  const key = snapshot.key;
+  createSignElement(data.name, data.text, data.color, key, data.x, data.y, data.scale);
 });
+
 db.ref(`rooms/${roomId}/signs`).on("child_changed", snapshot => {
   const data = snapshot.val();
   const key = snapshot.key;
@@ -162,13 +170,15 @@ db.ref(`rooms/${roomId}/signs`).on("child_changed", snapshot => {
     if(data.scale) sign.style.transform=`scale(${data.scale})`;
   }
 });
+
+// ===== Remove realtime =====
 db.ref(`rooms/${roomId}/signs`).on("child_removed", snapshot => {
   const key = snapshot.key;
   const sign = document.querySelector(`.sign[data-firebase-key='${key}']`);
   if(sign) sign.remove();
 });
 
-// ===== Create sign element =====
+// ===== Create sign =====
 function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   const sign = document.createElement("div");
   sign.className = "sign";
@@ -180,23 +190,6 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   label.style.background=color;
   label.style.padding="4px 8px";
   label.style.borderRadius="12px";
-
-  // ===== Color picker for this sign =====
-  const colorPicker = document.createElement("div");
-  colorPicker.className="color-picker";
-  ['#ffafcc','#a2d2ff','#b7e4c7','#fff1a8','#cdb4db'].forEach(c=>{
-    const btn = document.createElement("div");
-    btn.className="color-btn";
-    btn.style.background=c;
-    if(c===color) btn.classList.add("active");
-    btn.onclick = ()=>{
-      colorPicker.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      sign.querySelector(".label").style.background=c;
-      db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({color:c});
-    }
-    colorPicker.appendChild(btn);
-  });
 
   const closeBtn = document.createElement("div");
   closeBtn.className="close-btn";
@@ -211,7 +204,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   const resizeHandle = document.createElement("div");
   resizeHandle.className="resize-handle";
 
-  sign.append(label, colorPicker, resizeHandle, closeBtn);
+  sign.append(label,resizeHandle,closeBtn);
   signsBox.appendChild(sign);
 
   sign.style.left = x!==null? x+"px":"50%";
@@ -238,6 +231,7 @@ function createSignElement(name,text,color,key,x=null,y=null,scale=1){
     sign.style.left=newX+"px";
     sign.style.top=newY+"px";
     sign.style.transform=`scale(${scale})`;
+
     if(sign.dataset.firebaseKey)
       db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({x:newX,y:newY});
   });
