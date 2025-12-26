@@ -9,7 +9,7 @@ body {
   margin: 0;
   height: 100vh;
   font-family: sans-serif;
-  background: linear-gradient(135deg, #fde2e4, #e0fbfc);
+  background: linear-gradient(to bottom, #e0f7fa, #ffffff);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,11 +33,11 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 .cake { position: absolute; bottom: 0; width: 100%; font-size: 420px; text-align: center; line-height: 1; z-index: 1; }
 .cake.shake { animation: cakeShake 0.25s ease; }
 @keyframes cakeShake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-1deg); } 50% { transform: translateX(4px) rotate(1deg); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
-.signs { position: absolute; bottom: 220px; left: 50%; transform: translateX(-50%); width: 460px; height: 180px; z-index: 2; }
-.sign { position: absolute; display: flex; align-items: center; cursor: grab; touch-action: none; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+.signs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 2; }
+.sign { position: absolute; display: flex; align-items: center; cursor: grab; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); pointer-events: auto; }
 .label { color: #000; font-size: 14px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-.close-btn { margin-left: 6px; font-size: 14px; cursor: pointer; color: #fff; background: #ff6b6b; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
-@media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 320px; bottom: 180px; } }
+.close-btn { font-size: 12px; color: #888; background: transparent; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 6px; border-radius: 50%; }
+@media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 100%; height: 100%; } }
 
 /* ===== Emoji Snow Background ===== */
 #emoji-snow {
@@ -54,9 +54,10 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
   position: absolute;
   font-size: 24px;
   will-change: transform;
-  opacity: 0.8;
+  opacity: 0.2;
   user-select: none;
   pointer-events: none;
+  transition: opacity 0.5s ease;
 }
 </style>
 </head>
@@ -162,7 +163,7 @@ db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
   createSignElement(data.name, data.text, data.color, key);
 });
 
-// ===== Create sign element =====
+// ===== Create sign element (dragable) =====
 function createSignElement(name, text, color, key) {
   const sign = document.createElement("div");
   sign.className = "sign";
@@ -177,8 +178,7 @@ function createSignElement(name, text, color, key) {
 
   const closeBtn = document.createElement("div");
   closeBtn.className = "close-btn";
-  closeBtn.innerText = "❌";
-  closeBtn.style.pointerEvents = "auto";
+  closeBtn.innerText = "x";
   closeBtn.addEventListener("pointerdown", (e) => {
     e.stopPropagation(); 
     if (sign.dataset.firebaseKey) {
@@ -188,42 +188,38 @@ function createSignElement(name, text, color, key) {
   });
 
   sign.append(label, closeBtn);
+  signsBox.appendChild(sign);
+
+  // วางป้ายแบบกลางหน้าจอเริ่มต้น
   sign.style.left = "50%";
   sign.style.top = "40px";
   sign.style.transform = "translateX(-50%)";
 
-  enableDrag(sign);
-  signsBox.appendChild(sign);
-
-  cake.classList.add("shake");
-  setTimeout(() => cake.classList.remove("shake"), 350);
-}
-
-// ===== Drag =====
-function enableDrag(el) {
+  // ===== Drag =====
   let offsetX, offsetY, dragging = false;
-
-  el.addEventListener("pointerdown", e => { 
+  sign.addEventListener("pointerdown", e => { 
     dragging = true; 
-    el.setPointerCapture(e.pointerId); 
-    const r = el.getBoundingClientRect(); 
+    sign.setPointerCapture(e.pointerId); 
+    const r = sign.getBoundingClientRect(); 
     offsetX = e.clientX - r.left; 
     offsetY = e.clientY - r.top; 
   });
-
-  el.addEventListener("pointermove", e => {
+  sign.addEventListener("pointermove", e => {
     if (!dragging) return;
     const box = signsBox.getBoundingClientRect();
     let x = e.clientX - box.left - offsetX;
     let y = e.clientY - box.top - offsetY;
-    x = Math.max(0, Math.min(x, box.width - el.offsetWidth));
-    y = Math.max(0, Math.min(y, box.height - el.offsetHeight));
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-    el.style.transform = "";
+    x = Math.max(0, Math.min(x, box.width - sign.offsetWidth));
+    y = Math.max(0, Math.min(y, box.height - sign.offsetHeight));
+    sign.style.left = x + "px";
+    sign.style.top = y + "px";
+    sign.style.transform = "";
   });
+  sign.addEventListener("pointerup", () => { dragging = false; });
 
-  el.addEventListener("pointerup", () => { dragging = false; });
+  // ทำเค้กสั่น
+  cake.classList.add("shake");
+  setTimeout(() => cake.classList.remove("shake"), 350);
 }
 
 // ===== Export =====
@@ -237,7 +233,7 @@ document.getElementById("exportBtn").onclick = () => {
 };
 
 // ===== Emoji Snow =====
-const emojis = ['🐼','🐨','🐧','🤍','✨','🎄','🎅','🎁','❄️','☃️','🔔','🌟','🕯️','🧣','🧤','🛷','🦌','🍪','🎀','⛄','🎉'];
+const emojis = ['❄️','☃️','✨','🎄','🎅','🎁','🌟','🕯️','🛷','🦌','🍪','🎀','⛄','🎉']; 
 
 function createEmoji() {
   const emojiEl = document.createElement('div');
@@ -245,8 +241,7 @@ function createEmoji() {
   emojiEl.innerText = emojis[Math.floor(Math.random() * emojis.length)];
   emojiEl.style.left = Math.random() * window.innerWidth + 'px';
   emojiEl.style.fontSize = (20 + Math.random() * 30) + 'px';
-  emojiEl.style.opacity = 0.5 + Math.random() * 0.5;
-
+  emojiEl.style.opacity = 0.2 + Math.random() * 0.5; // สีจางลง
   document.getElementById('emoji-snow').appendChild(emojiEl);
 
   let top = -50;
@@ -266,7 +261,8 @@ function createEmoji() {
   fall();
 }
 
-setInterval(createEmoji, 300);
+// สร้างต่อเนื่อง
+setInterval(createEmoji, 150);
 </script>
 
 </body>
