@@ -37,6 +37,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 .sign { position: absolute; display: flex; align-items: center; cursor: grab; padding: 4px 8px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,.15); pointer-events: auto; }
 .label { color: #000; font-size: 14px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 .close-btn { font-size: 12px; color: #888; background: transparent; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 6px; border-radius: 50%; }
+.resize-handle { width: 10px; height: 10px; background: #555; border-radius: 50%; cursor: nwse-resize; margin-left: 4px; }
 @media (max-width: 480px) { .cake { font-size: 260px; } .signs { width: 100%; height: 100%; } }
 
 /* ===== Emoji Snow Background ===== */
@@ -52,9 +53,9 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 }
 .emoji {
   position: absolute;
-  font-size: 24px;
+  font-size: 16px;
   will-change: transform;
-  opacity: 0.2;
+  opacity: 0.15;
   user-select: none;
   pointer-events: none;
   transition: opacity 0.5s ease;
@@ -63,17 +64,14 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 </head>
 <body>
 
-<!-- Emoji Snow Layer -->
 <div id="emoji-snow"></div>
 
-<!-- Intro -->
 <div class="screen intro active" id="intro">
   <h1>🎂 Byebye 2025 🎂</h1>
   <input id="nameInput" placeholder="Your Name"><br>
   <button id="startBtn">Start 🎉</button>
 </div>
 
-<!-- App -->
 <div class="screen app" id="app">
   <div class="welcome" id="welcomeText"></div>
   <input id="msg" placeholder="✨ Things I'm proud of this year ✨">
@@ -99,7 +97,6 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDTGOKNMwtoTsu_u6nCm_wKUQUSUZIflE4",
   authDomain: "goodjob-ffgk.firebaseapp.com",
@@ -109,7 +106,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ===== Room จาก URL =====
 const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room") || "love";
 
@@ -127,7 +123,6 @@ const sendBtn = document.getElementById("sendBtn");
 let currentColor = "#ffafcc";
 let userName = "";
 
-// ===== Start =====
 startBtn.onclick = () => {
   userName = nameInput.value.trim() || "Friend";
   welcomeText.innerText = `Our 2025 ✨`;
@@ -135,7 +130,6 @@ startBtn.onclick = () => {
   app.classList.add("active");
 };
 
-// ===== Color select =====
 colorButtons.forEach(btn => {
   btn.onclick = () => {
     colorButtons.forEach(b => b.classList.remove("active"));
@@ -144,125 +138,152 @@ colorButtons.forEach(btn => {
   };
 });
 
-// ===== Add sign function =====
 function addSign() {
   const text = input.value.trim();
-  if (!text) return;
-  db.ref(`rooms/${roomId}/signs`).push({ name: userName, text, color: currentColor, timestamp: Date.now() });
+  if(!text) return;
+  db.ref(`rooms/${roomId}/signs`).push({ 
+    name: userName, text, color: currentColor, timestamp: Date.now(), x: null, y: null, scale: 1
+  });
   input.value = "";
 }
 
-// ===== Send on Enter or Send Button =====
-input.addEventListener("keydown", e => { if (e.key === "Enter") addSign(); });
+input.addEventListener("keydown", e => { if(e.key==="Enter") addSign(); });
 sendBtn.addEventListener("click", addSign);
 
-// ===== Listen realtime =====
 db.ref(`rooms/${roomId}/signs`).on("child_added", snapshot => {
   const data = snapshot.val();
   const key = snapshot.key;
-  createSignElement(data.name, data.text, data.color, key);
+  createSignElement(data.name, data.text, data.color, key, data.x, data.y, data.scale);
 });
 
-// ===== Create sign element (dragable) =====
-function createSignElement(name, text, color, key) {
+db.ref(`rooms/${roomId}/signs`).on("child_changed", snapshot => {
+  const data = snapshot.val();
+  const key = snapshot.key;
+  const sign = document.querySelector(`.sign[data-firebase-key='${key}']`);
+  if(sign) {
+    if(data.x !== null && data.y !== null){
+      sign.style.left = data.x + "px";
+      sign.style.top = data.y + "px";
+    }
+    if(data.color) sign.querySelector(".label").style.background = data.color;
+    if(data.scale) sign.style.transform = `scale(${data.scale})`;
+  }
+});
+
+function createSignElement(name,text,color,key,x=null,y=null,scale=1){
   const sign = document.createElement("div");
   sign.className = "sign";
   sign.dataset.firebaseKey = key;
 
   const label = document.createElement("div");
-  label.className = "label";
-  label.innerText = `${name}: ${text}`;
-  label.style.background = color;
-  label.style.padding = "4px 8px";
-  label.style.borderRadius = "12px";
+  label.className="label";
+  label.innerText=`${name}: ${text}`;
+  label.style.background=color;
+  label.style.padding="4px 8px";
+  label.style.borderRadius="12px";
 
   const closeBtn = document.createElement("div");
-  closeBtn.className = "close-btn";
-  closeBtn.innerText = "x";
-  closeBtn.addEventListener("pointerdown", (e) => {
-    e.stopPropagation(); 
-    if (sign.dataset.firebaseKey) {
+  closeBtn.className="close-btn";
+  closeBtn.innerText="x";
+  closeBtn.addEventListener("pointerdown", e=>{
+    e.stopPropagation();
+    if(sign.dataset.firebaseKey){
       db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).remove();
     }
     sign.remove();
   });
 
-  sign.append(label, closeBtn);
+  const resizeHandle = document.createElement("div");
+  resizeHandle.className="resize-handle";
+
+  sign.append(label,resizeHandle,closeBtn);
   signsBox.appendChild(sign);
 
-  // วางป้ายแบบกลางหน้าจอเริ่มต้น
-  sign.style.left = "50%";
-  sign.style.top = "40px";
-  sign.style.transform = "translateX(-50%)";
+  sign.style.left = x!==null? x+"px":"50%";
+  sign.style.top = y!==null? y+"px":"40px";
+  sign.style.transform = scale!==1? `scale(${scale})`:"translateX(-50%)";
 
-  // ===== Drag =====
-  let offsetX, offsetY, dragging = false;
-  sign.addEventListener("pointerdown", e => { 
-    dragging = true; 
-    sign.setPointerCapture(e.pointerId); 
-    const r = sign.getBoundingClientRect(); 
-    offsetX = e.clientX - r.left; 
-    offsetY = e.clientY - r.top; 
+  // Drag
+  let offsetX,offsetY,dragging=false;
+  sign.addEventListener("pointerdown",e=>{
+    if(e.target===resizeHandle) return;
+    dragging=true;
+    sign.setPointerCapture(e.pointerId);
+    const r=sign.getBoundingClientRect();
+    offsetX=e.clientX-r.left;
+    offsetY=e.clientY-r.top;
   });
-  sign.addEventListener("pointermove", e => {
-    if (!dragging) return;
-    const box = signsBox.getBoundingClientRect();
-    let x = e.clientX - box.left - offsetX;
-    let y = e.clientY - box.top - offsetY;
-    x = Math.max(0, Math.min(x, box.width - sign.offsetWidth));
-    y = Math.max(0, Math.min(y, box.height - sign.offsetHeight));
-    sign.style.left = x + "px";
-    sign.style.top = y + "px";
-    sign.style.transform = "";
+  sign.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    const box=signsBox.getBoundingClientRect();
+    let newX=e.clientX-box.left-offsetX;
+    let newY=e.clientY-box.top-offsetY;
+    newX=Math.max(0,Math.min(newX,box.width-sign.offsetWidth));
+    newY=Math.max(0,Math.min(newY,box.height-sign.offsetHeight));
+    sign.style.left=newX+"px";
+    sign.style.top=newY+"px";
+    sign.style.transform=`scale(${scale})`;
+    if(sign.dataset.firebaseKey) db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({x:newX,y:newY});
   });
-  sign.addEventListener("pointerup", () => { dragging = false; });
+  sign.addEventListener("pointerup",()=>{dragging=false;});
 
-  // ทำเค้กสั่น
+  // Resize
+  let resizing=false;
+  let startScale=scale;
+  resizeHandle.addEventListener("pointerdown",e=>{
+    e.stopPropagation();
+    resizing=true;
+    sign.setPointerCapture(e.pointerId);
+    startScale=scale;
+    offsetX=e.clientX;
+  });
+  resizeHandle.addEventListener("pointermove",e=>{
+    if(!resizing) return;
+    let diff=(e.clientX-offsetX)/100;
+    let newScale=Math.max(0.5,startScale+diff);
+    scale=newScale;
+    sign.style.transform=`scale(${scale})`;
+    if(sign.dataset.firebaseKey) db.ref(`rooms/${roomId}/signs/${sign.dataset.firebaseKey}`).update({scale});
+  });
+  resizeHandle.addEventListener("pointerup",()=>{resizing=false;});
+
   cake.classList.add("shake");
-  setTimeout(() => cake.classList.remove("shake"), 350);
+  setTimeout(()=>cake.classList.remove("shake"),350);
 }
 
-// ===== Export =====
-document.getElementById("exportBtn").onclick = () => {
-  html2canvas(document.querySelector(".cake-wrapper")).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "cake-wish.png";
-    link.href = canvas.toDataURL();
+// Export
+document.getElementById("exportBtn").onclick = ()=>{
+  html2canvas(document.querySelector(".cake-wrapper")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="cake-wish.png";
+    link.href=canvas.toDataURL();
     link.click();
   });
 };
 
-// ===== Emoji Snow =====
-const emojis = ['❄️','☃️','✨','🎄','🎅','🎁','🌟','🕯️','🛷','🦌','🍪','🎀','⛄','🎉']; 
-
-function createEmoji() {
-  const emojiEl = document.createElement('div');
-  emojiEl.className = 'emoji';
-  emojiEl.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-  emojiEl.style.left = Math.random() * window.innerWidth + 'px';
-  emojiEl.style.fontSize = (20 + Math.random() * 30) + 'px';
-  emojiEl.style.opacity = 0.2 + Math.random() * 0.5; // สีจางลง
-  document.getElementById('emoji-snow').appendChild(emojiEl);
-
-  let top = -50;
-  const speed = 1 + Math.random() * 2;
-  const swing = Math.random() * 50;
-
-  function fall() {
-    top += speed;
-    const x = parseFloat(emojiEl.style.left) + Math.sin(top / 50) * swing;
-    emojiEl.style.transform = `translate(${x}px, ${top}px)`;
-    if (top < window.innerHeight + 50) {
-      requestAnimationFrame(fall);
-    } else {
-      emojiEl.remove();
-    }
+// Emoji snow
+const emojis=['❄️','☃️','✨','🎄','🎅','🎁','🌟','🕯️','🛷','🦌','🍪','🎀','⛄','🎉'];
+function createEmoji(){
+  const e=document.createElement('div');
+  e.className='emoji';
+  e.innerText=emojis[Math.floor(Math.random()*emojis.length)];
+  e.style.left=Math.random()*window.innerWidth+'px';
+  e.style.fontSize=(12+Math.random()*12)+'px';
+  e.style.opacity=0.15+Math.random()*0.3;
+  document.getElementById('emoji-snow').appendChild(e);
+  let top=-30;
+  const speed=0.3+Math.random()*0.7;
+  const swing=Math.random()*30;
+  function fall(){
+    top+=speed;
+    const x=parseFloat(e.style.left)+Math.sin(top/50)*swing;
+    e.style.transform=`translate(${x}px,${top}px)`;
+    if(top<window.innerHeight+30) requestAnimationFrame(fall);
+    else e.remove();
   }
   fall();
 }
-
-// สร้างต่อเนื่อง
-setInterval(createEmoji, 150);
+setInterval(createEmoji, 300);
 </script>
 
 </body>
