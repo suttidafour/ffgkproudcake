@@ -52,7 +52,7 @@ button { padding: 8px 14px; border-radius: 20px; border: none; font-size: 14px; 
 <!-- App -->
 <div class="screen app" id="app">
   <div class="welcome" id="welcomeText"></div>
-  <input id="msg" placeholder="✨ Things i'm pround of this year ✨">
+  <input id="msg" placeholder="✨ Things I'm proud of this year ✨">
   <div class="controls">
     <div class="color-picker">
       <div class="color-btn active" data-color="#ffafcc" style="background:#ffafcc"></div>
@@ -87,9 +87,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ===== Room จาก URL =====
+// ===== Room จาก URL (ค่าเริ่มต้น love) =====
 const params = new URLSearchParams(window.location.search);
-const roomId = params.get("room") || "default-room";
+const roomId = params.get("room") || "love";
 
 const intro = document.getElementById("intro");
 const app = document.getElementById("app");
